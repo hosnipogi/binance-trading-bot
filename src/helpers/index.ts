@@ -38,9 +38,10 @@ const getStepAndTickSize = async ({
     api: Binance;
     symbol: string;
 }) => {
-    const { symbols } = await api.futuresExchangeInfo("BTCUSDT");
+    const { symbols } = await api.futuresExchangeInfo();
+    const ticker = symbol.replace('PERP', '')
     const found = symbols.find(
-        (coin: { symbol: string }) => coin.symbol === symbol
+        (coin: { symbol: string }) => coin.symbol === ticker
     );
 
     if (!found) throw "Not found again";

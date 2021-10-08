@@ -1,6 +1,7 @@
 import Binance from "node-binance-api";
 import { computeTPSL, getStepAndTickSize, computeActualSize } from "./index";
 import { round, precision } from "../helpers";
+import hasOpenPosition from "./hasOpenPosition";
 
 export default async ({
     api,
@@ -17,6 +18,14 @@ export default async ({
     tpFactor: number;
     position: "long" | "short";
 }) => {
+    if (
+        await hasOpenPosition({
+            api,
+            symbol,
+        })
+    )
+        return `Refusing to execute, a ${symbol} position is still running.`;
+
     const { stepSize, tickSize } = await getStepAndTickSize({
         api: api,
         symbol,
@@ -28,9 +37,13 @@ export default async ({
             newOrderRespType: "RESULT",
         });
 
-        console.info(entry);
-
         if (!entry?.orderId) throw "Error submitting market order";
+        console.info({
+            symbol: entry.symbol,
+            orderId: entry.orderId,
+            ordertype: entry.type,
+            price: entry.avgPrice,
+        });
 
         const { executedQty, avgPrice } = entry;
 
@@ -48,8 +61,13 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        console.info(stopLossLimit);
         if (!stopLossLimit.orderId) throw "Failed to set Stop Loss Limit Order";
+        console.info({
+            symbol: stopLossLimit.symbol,
+            orderId: stopLossLimit.orderId,
+            ordertype: stopLossLimit.type,
+            price: stopLossLimit.stopPrice,
+        });
 
         const tpLimit = await api.futuresSell(symbol, +executedQty, tp, {
             reduceOnly: true,
@@ -58,8 +76,13 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        console.info(tpLimit);
         if (!tpLimit.orderId) throw "Failed to set TP Limit Order";
+        console.info({
+            symbol: tpLimit.symbol,
+            orderId: tpLimit.orderId,
+            ordertype: tpLimit.type,
+            price: tpLimit.stopPrice,
+        });
 
         // market close incase market scams us
 
@@ -78,27 +101,48 @@ export default async ({
             }
         );
 
-        console.info(slMarketClose);
         if (!slMarketClose.orderId)
             throw "Failed to set Protection SL Market Close Order";
+        console.info({
+            symbol: slMarketClose.symbol,
+            orderId: slMarketClose.orderId,
+            ordertype: slMarketClose.type,
+            price: slMarketClose.stopPrice,
+        });
 
         return {
-            symbol: entry.symbol,
-            position,
-            marketOrderID: entry.orderId,
-            entryPrice: entry.avgPrice,
-            tp,
-            sl,
-            executedQty,
+            market: {
+                symbol: entry.symbol,
+                position,
+                marketOrderID: entry.orderId,
+                entryPrice: entry.avgPrice,
+                executedQty,
+            },
+            stopLoss: {
+                orderId: stopLossLimit.orderId,
+                price: stopLossLimit.stopPrice,
+            },
+            takeProfit: {
+                orderId: tpLimit.orderId,
+                price: tpLimit.stopPrice,
+            },
+            stopMarket: {
+                orderId: slMarketClose.orderId,
+                price: slMarketClose.stopPrice,
+            },
         };
     } else if (position === "short") {
         const entry = await api.futuresMarketSell(symbol, finalQty, {
             newOrderRespType: "RESULT",
         });
 
-        console.info(entry);
-
         if (!entry?.orderId) throw "Error submitting market order";
+        console.info({
+            symbol: entry.symbol,
+            orderId: entry.orderId,
+            ordertype: entry.type,
+            price: entry.avgPrice,
+        });
 
         const { executedQty, avgPrice } = entry;
 
@@ -116,8 +160,13 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        console.info(stopLossLimit);
         if (!stopLossLimit.orderId) throw "Failed to set Stop Loss Limit Order";
+        console.info({
+            symbol: stopLossLimit.symbol,
+            orderId: stopLossLimit.orderId,
+            ordertype: stopLossLimit.type,
+            price: stopLossLimit.stopPrice,
+        });
 
         const tpLimit = await api.futuresBuy(symbol, +executedQty, tp, {
             reduceOnly: true,
@@ -126,8 +175,13 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        console.info(tpLimit);
         if (!tpLimit.orderId) throw "Failed to set TP Limit Order";
+        console.info({
+            symbol: tpLimit.symbol,
+            orderId: tpLimit.orderId,
+            ordertype: tpLimit.type,
+            price: tpLimit.stopPrice,
+        });
 
         // again market close short incase market scams us
 
@@ -142,18 +196,35 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        console.info(slMarketClose);
         if (!slMarketClose.orderId)
             throw "Failed to set Protection SL Market Close Order";
+        console.info({
+            symbol: slMarketClose.symbol,
+            orderId: slMarketClose.orderId,
+            ordertype: slMarketClose.type,
+            price: slMarketClose.stopPrice,
+        });
 
         return {
-            symbol: entry.symbol,
-            position,
-            marketOrderID: entry.orderId,
-            entryPrice: entry.avgPrice,
-            tp,
-            sl,
-            executedQty,
+            market: {
+                symbol: entry.symbol,
+                position,
+                marketOrderID: entry.orderId,
+                entryPrice: entry.avgPrice,
+                executedQty,
+            },
+            stopLoss: {
+                orderId: stopLossLimit.orderId,
+                price: stopLossLimit.stopPrice,
+            },
+            takeProfit: {
+                orderId: tpLimit.orderId,
+                price: tpLimit.stopPrice,
+            },
+            stopMarket: {
+                orderId: slMarketClose.orderId,
+                price: slMarketClose.stopPrice,
+            },
         };
     } else {
         return 0;

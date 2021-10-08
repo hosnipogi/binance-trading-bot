@@ -15,19 +15,18 @@ app.get("/", async (req, res) => {
     const runningPositions = allPositions.filter(
         ({ positionAmt }: { positionAmt: number }) => +positionAmt !== 0
     );
-    const balance = await binance.futuresBalance();
+    // const balance = await binance.futuresBalance();
     const openOrders = await binance.futuresOpenOrders();
 
     return res.json({
         runningPositions,
         openOrders,
-        balance,
+        // balance,
     });
 });
 
 app.post("/execute", async (req, res) => {
-    const { password, symbol, position, size, tpFactor, slFactor, limit } =
-        req.body;
+    const { password, symbol, position, size, tpFactor, slFactor } = req.body;
 
     try {
         if (password !== process.env.PASSWORD)
@@ -54,9 +53,7 @@ app.post("/execute", async (req, res) => {
             order,
         });
     } catch (e) {
-        console.error({
-            e,
-        });
+        console.error(e);
         return res.json({
             error: "Something went wrong.",
             message: e,

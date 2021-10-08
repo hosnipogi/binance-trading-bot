@@ -38,9 +38,11 @@ app.post("/execute", async (req, res) => {
             if (position !== "short") throw "Please check syntax";
         }
 
+        const ticker = symbol.replace("PERP", "");
+
         const order = await trade({
             api: binance,
-            symbol,
+            symbol: ticker,
             position,
             size,
             slFactor,

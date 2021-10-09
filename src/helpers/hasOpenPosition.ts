@@ -1,13 +1,20 @@
 import Binance from "node-binance-api";
+import log from "./logger";
 
 export default async ({ api, symbol }: { api: Binance; symbol: string }) => {
     const allPositions = await api.futuresPositionRisk();
+    if (!allPositions) throw "Cannot GET allPositions";
+
     const found = allPositions.find(
-        (data: { symbol: string; positionAmt: number }) =>
-            data.symbol === symbol
+        (data: { symbol: string }) => data.symbol === symbol
     );
 
-    const hasOpenPosition = +found.positionAmt ? true : false;
+    if (!found) throw `Cannot find ${symbol}`;
+
+    const hasOpenPosition =
+        +found.positionAmt || +found.entryPrice || +found.liquidationPrice
+            ? true
+            : false;
 
     if (!hasOpenPosition) {
         const hasFloatingOrders = await api.futuresOpenOrders(symbol);
@@ -15,7 +22,7 @@ export default async ({ api, symbol }: { api: Binance; symbol: string }) => {
         return 0;
     }
 
-    console.info(`${symbol} position still open, will not execute trade.`);
+    log.info(`${symbol} position still open, will not execute trade.`);
 
     return 1;
 };

@@ -7,8 +7,14 @@ const port = process.env.PORT;
 
 import binance from "./broker";
 import trade from "./helpers/executeOrder";
+import log from "./helpers/logger";
 
 app.use(express.json());
+
+app.get("/check", async (req, res) => {
+    const a = await binance.futuresAllOrders();
+    return res.json({ a });
+});
 
 app.get("/", async (req, res) => {
     const allPositions = await binance.futuresPositionRisk();
@@ -53,14 +59,15 @@ app.post("/execute", async (req, res) => {
             order,
         });
     } catch (e) {
-        console.error(e);
-        return res.json({
-            error: "Something went wrong.",
+        const error = {
+            error: "Something went wrong",
             message: e,
-        });
+        };
+        log.error(error);
+        return res.json(error);
     }
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+    log.info(`Trading bot listening at http://localhost:${port}`);
 });

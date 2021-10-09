@@ -43,7 +43,7 @@ const getStepAndTickSize = async ({
         (coin: { symbol: string }) => coin.symbol === symbol
     );
 
-    if (!found) throw "Not found again";
+    if (!found) throw `${symbol} not found`;
 
     const { stepSize } = found.filters.find(
         ({ filterType }: { filterType: string }) => filterType === "LOT_SIZE"

@@ -1,6 +1,7 @@
 import Binance from "node-binance-api";
 import { computeTPSL, getStepAndTickSize, computeActualSize } from "./index";
 import { round, precision } from "../helpers";
+import log from "./logger";
 import hasOpenPosition from "./hasOpenPosition";
 
 export default async ({
@@ -37,8 +38,8 @@ export default async ({
             newOrderRespType: "RESULT",
         });
 
-        if (!entry?.orderId) throw "Error submitting market order";
-        console.info({
+        if (!entry?.orderId) throw "Error submitting BUY market order";
+        log.info({
             symbol: entry.symbol,
             orderId: entry.orderId,
             ordertype: entry.type,
@@ -61,8 +62,9 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        if (!stopLossLimit.orderId) throw "Failed to set Stop Loss Limit Order";
-        console.info({
+        if (!stopLossLimit.orderId)
+            throw "Failed to set SELL Stop Loss Limit Order";
+        log.info({
             symbol: stopLossLimit.symbol,
             orderId: stopLossLimit.orderId,
             ordertype: stopLossLimit.type,
@@ -76,8 +78,8 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        if (!tpLimit.orderId) throw "Failed to set TP Limit Order";
-        console.info({
+        if (!tpLimit.orderId) throw "Failed to set SELL TP Limit Order";
+        log.info({
             symbol: tpLimit.symbol,
             orderId: tpLimit.orderId,
             ordertype: tpLimit.type,
@@ -102,8 +104,8 @@ export default async ({
         );
 
         if (!slMarketClose.orderId)
-            throw "Failed to set Protection SL Market Close Order";
-        console.info({
+            throw "Failed to set Protection SELL SL Market Close Order";
+        log.info({
             symbol: slMarketClose.symbol,
             orderId: slMarketClose.orderId,
             ordertype: slMarketClose.type,
@@ -136,8 +138,8 @@ export default async ({
             newOrderRespType: "RESULT",
         });
 
-        if (!entry?.orderId) throw "Error submitting market order";
-        console.info({
+        if (!entry?.orderId) throw "Error submitting SELL market order";
+        log.info({
             symbol: entry.symbol,
             orderId: entry.orderId,
             ordertype: entry.type,
@@ -160,8 +162,9 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        if (!stopLossLimit.orderId) throw "Failed to set Stop Loss Limit Order";
-        console.info({
+        if (!stopLossLimit.orderId)
+            throw "Failed to set BUY Stop Loss Limit Order";
+        log.info({
             symbol: stopLossLimit.symbol,
             orderId: stopLossLimit.orderId,
             ordertype: stopLossLimit.type,
@@ -175,8 +178,8 @@ export default async ({
             timeInForce: "GTC",
         });
 
-        if (!tpLimit.orderId) throw "Failed to set TP Limit Order";
-        console.info({
+        if (!tpLimit.orderId) throw "Failed to set BUY TP Limit Order";
+        log.info({
             symbol: tpLimit.symbol,
             orderId: tpLimit.orderId,
             ordertype: tpLimit.type,
@@ -197,8 +200,8 @@ export default async ({
         });
 
         if (!slMarketClose.orderId)
-            throw "Failed to set Protection SL Market Close Order";
-        console.info({
+            throw "Failed to set Protection BUY SL Market Close Order";
+        log.info({
             symbol: slMarketClose.symbol,
             orderId: slMarketClose.orderId,
             ordertype: slMarketClose.type,
